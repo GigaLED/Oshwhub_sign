@@ -10,7 +10,7 @@
 
     {"PhoneNumber1": "Password1","PhoneNumber2": "Password2", "PhoneNumbern": "Passwordn"}
 
-还需要ChromeDriver Windows安装参考 [这里](https://blog.csdn.net/Z_Lisa/article/details/133307151)
+还需要ChromeDriver，Windows的安装参考 [这里](https://blog.csdn.net/Z_Lisa/article/details/133307151)
 
 然后就可以运行了
 
