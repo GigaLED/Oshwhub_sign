@@ -2,15 +2,19 @@
  Automatic check-in for Oshwhub
 ## How ti Run
 
-Add environment variables:
+添加如下环境变量
 
-    OSHW  {"PhoneNumber1": "Password1","PhoneNumber2": "Password2", "PhoneNumbern": "Passwordn"}
+    OSHW
 
-Find a way to install chrome and chrome driver with version number, and add it to the path.
+内容如下
 
-Then you can run this program.
+    {"PhoneNumber1": "Password1","PhoneNumber2": "Password2", "PhoneNumbern": "Passwordn"}
 
-Also there is notify to send messages.
+还需要ChromeDriver Windows安装参考 [这里](https://blog.csdn.net/Z_Lisa/article/details/133307151)
+
+然后就可以运行了
+
+还有个notify模块可以推送消息
 
 ### 已完成
 - [x] 自动签到
