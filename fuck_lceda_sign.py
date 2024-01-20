@@ -541,7 +541,7 @@ if __name__ == "__main__":
     
     if EMABLE_CouponActivation and Coupon_Exist:
         # 定义要运行的脚本的路径
-        script_path = "src/ActivateCoupons.py"
+        script_path = "ActivateCoupons.py"
         # 使用 subprocess 模块运行脚本的 main 函数
         # 使用 os.path.exists() 函数检查文件是否存在
         if os.path.exists(script_path):

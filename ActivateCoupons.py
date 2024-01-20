@@ -117,11 +117,12 @@ def SlideToLogin(browser: webdriver.Chrome, wait: WebDriverWait, activate_msg: s
         slider = wait.until(
             EC.presence_of_element_located((By.XPATH, '//*[@id="nc_1_n1z"]')))
         ActionChains(browser).drag_and_drop_by_offset(slider, 400, 0).perform()
+        sleep(1)
         confirm_button = wait.until(
             EC.presence_of_element_located((By.CSS_SELECTOR,"#__layout > div > div > div > main > div > div > div:nth-child(2) > div:nth-child(1) > div > div:nth-child(2) > div > button")))
         confirm_button.click()
         # 激活
-        sleep(2)
+        sleep(1)
         return True, activate_msg
     except Exception as ex:
         logger.error("无法登录:滑动验证或登录不成功!: {}".format(ex))
@@ -154,7 +155,7 @@ def CheckCoupons(wait: WebDriverWait, activate_msg: str, CouponNum = 2):
                 couponFind += 1
                 coupon_name = wait.until(
                                 EC.presence_of_element_located((By.CSS_SELECTOR,
-                                    "#root > div > main > main > div > div > div.main-grow > div > div.coupon-center > div.coupon-layer > div > div.coupon-foot > div.coupon-name")))
+                                    "#root > div > main > main > div > div > div.main-grow > div > div.coupon-center > div.coupon-layer > div > div.coupon-foot > div.coupon-name"))).text
             except NoSuchElementException as ex:
                 logger.error("优惠券查找出错: {}".format(ex))
                 if not couponFind:
@@ -180,8 +181,8 @@ def CheckCoupons(wait: WebDriverWait, activate_msg: str, CouponNum = 2):
                 activate_msg += "查找确认兑换按钮超时! \n"
                 break
             confirm_button.click()
-            if not coupon_name:
-                activate_msg += "已激活：{} \n".format(coupon_name.text)
+            if not couponFind:
+                activate_msg += "已激活：{} \n".format(coupon_name)
             success_count += 1
         return True, activate_msg
     except Exception as ex:
