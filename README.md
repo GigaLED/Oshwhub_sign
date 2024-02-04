@@ -12,11 +12,16 @@
 
 还需要ChromeDriver，Windows的安装参考 [这里](https://blog.csdn.net/Z_Lisa/article/details/133307151)
 
+Qinglong安装
+
+    apk add chromium
+    apk add chromium-chromedriver
+
 然后就可以运行了
 
 还有个notify模块可以推送消息
 
-### 已完成
+### 已实现
 - [x] 自动签到
 - [x] 识别奖励
 - [x] 推送消息
