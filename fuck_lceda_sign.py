@@ -407,6 +407,8 @@ def sign(LoginName: str, LoginPassword: str, retry_count=3):  # 默认出错会�
     chrome_options.add_argument("--no-sandbox")
     chrome_options.add_argument("--disable-blink-features=AutomationControlled")
     chrome_options.add_argument("--disable-gpu")
+    chrome_options.add_argument('--disable-dev-shm-usage')
+
     browser = webdriver.Chrome(options=chrome_options)
     browser.set_page_load_timeout(20.0)  # 设置页面加载超时时间
     wait = WebDriverWait(browser, 10)
