@@ -1,5 +1,5 @@
 import os
-
+import sys
 import traceback
 import datetime
 import subprocess
@@ -523,20 +523,15 @@ if __name__ == "__main__":
         logger.info(
             '“OSHW”环境变量不存在，请添加名为OSHW的环境变量, 值为{"手机号1": "密码1","手机号2": "密码2", "手机号n": "密码n"}!'
         )
-    if ENABLE_PushNnotify:
+    if ENABLE_PushNnotify and "notify" in sys.modules:
         try:
             title = "立创签到成功" + str(success_count) + "个账号"
             send(title, notifications)
         except Exception:
-            logger.info("再次尝试推送")
-            try:
-                sleep(1)
-                send(title, notifications)
-            except Exception as ex:
-                logger.error("推送失败!:{}".format(ex))
-                logger.info("再次尝试推送")
+            logger.error("推送失败!:{}".format(ex))
     else:
-        logger.info("推送未开启")
+        logger.info("\n" + notifications)
+
     logger.info("签到结束 ")
     
     if EMABLE_CouponActivation and Coupon_Exist:
