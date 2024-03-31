@@ -234,6 +234,7 @@ def WeekAttendance(browser: webdriver.Chrome, wait: WebDriverWait, sign_msg: str
                         except Exception as ex:
                             logger.error("七日奖励可以领取但领取错误!: {}".format(ex))
                             sign_msg += "奖励可以领取但领取错误! \n"
+                        return True, sign_msg
                     else:
                         logger.info("不满足条件")
                         sign_msg += "不满足条件 \n"
@@ -325,13 +326,14 @@ def MonthAttendance(browser: webdriver.Chrome, wait: WebDriverWait, sign_msg: st
                         except Exception as ex:
                             logger.error("月度奖励可以领取但领取错误!: {}".format(ex))
                             sign_msg += "月度奖励可以领取但领取错误! \n"
-                        return True, sign_msg
+                    return True, sign_msg
                 except Exception as ex:
                     logger.error("月度奖励异常!: {}".format(ex))
                     sign_msg += "月度奖励异常! \n"
                     return False, sign_msg
             except Exception as ex:
                 logger.error("月度签到网页刷新失败: {}".format(ex))
+                return False, sign_msg
         else:
             month_signdays = wait.until(
                 EC.presence_of_element_located((  # 月度签到天数
