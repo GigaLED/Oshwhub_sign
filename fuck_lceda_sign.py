@@ -1,4 +1,5 @@
 import os
+import re
 import sys
 import traceback
 import datetime
@@ -20,11 +21,12 @@ ENABLE_MonthReward = True  # 月度奖励领取开关，只有每月最后一天
 ENABLE_PushPoints = True  # 推送积分数开关
 EMABLE_CouponActivation = True # 优惠券激活开关
 
-if ENABLE_PushNnotify:
+if ENABLE_PushNnotify and "notify" in sys.modules:
     try:
         from notify import send
     except ModuleNotFoundError as ex:
         logger.info("notify 模块未找到，跳过推送! ")
+        ENABLE_PushNnotify = False
 
 success_count = 0
 Coupon_Exist = False
@@ -124,8 +126,9 @@ def SlideToLogin(browser: webdriver.Chrome, wait: WebDriverWait, sign_msg: str):
         slider = wait.until(
             EC.presence_of_element_located((By.XPATH, '//*[@id="nc_1_n1z"]')))
         ActionChains(browser).drag_and_drop_by_offset(slider, 400, 0).perform()
+        sleep(1)
         confirm_button = wait.until(
-            EC.presence_of_element_located((By.CSS_SELECTOR,"#__layout > div > div > div > main > div > div > div:nth-child(2) > div:nth-child(1) > div > div:nth-child(2) > div > button")))
+            EC.presence_of_element_located((By.XPATH,"""//*[@id="__layout"]/div/div/div/main/div/div/div[2]/div[1]/div/div[2]/div/button""")))
         confirm_button.click()
         # 激活
         sleep(2)
@@ -151,8 +154,9 @@ def DailyAttendance(browser: webdriver.Chrome, wait: WebDriverWait, sign_msg: st
         logger.debug("当前浏览器地址: {}".format(browser.current_url))
         logger.info("每日签到: ")
         sign_msg += "每日签到: "
+        sleep(1)
         sign_in_button = wait.until(EC.presence_of_element_located(
-                        (By.CSS_SELECTOR, '#home-content > div > div.sign-detail-wrap > div.sign-action > button')))
+                        (By.XPATH, '/html/body/div[2]/div/div[1]/div[1]/div/div[1]/div[2]/div[1]/div[1]/span[2]')))
         sleep(1)
         sign_in_button_status = sign_in_button.text
         if "立即签到" in sign_in_button_status:
@@ -189,55 +193,40 @@ def WeekAttendance(browser: webdriver.Chrome, wait: WebDriverWait, sign_msg: str
     if ENABLE_WeekReward:
         logger.info("七日奖励 ")
         sign_msg += "七日奖励: "
-        if today.weekday() == 6:
+        if today.weekday() != 6:
             try:  # 执行网页刷新
                 browser.refresh()
                 logger.info("七日签到网页刷新成功")
                 try:
-                    # week_img = wait.until(EC.presence_of_element_located(             #七日签到图片
-                    #    (By.CSS_SELECTOR, '#home-content > div > div.sign-detail-wrap > div.sign-date > div.sign-info > div.reward-way > div.seven-day > img.hide')))   #七日签到图片
+                    sleep(1)
                     week_reword_button = wait.until(
                         EC.presence_of_element_located((  # 七日签到按钮
-                            By.CSS_SELECTOR,
-                            "#home-content > div > div.sign-detail-wrap > div.sign-date > div.sign-info > div.reward-way > div.seven-day")))  # 七日签到按钮
-                    week_reword_button_status = week_reword_button.get_attribute("data-status")  # 七日签到按钮属性
-                    week_signdays = wait.until(
-                        EC.presence_of_element_located((  # 七日签到天数
-                            By.CSS_SELECTOR,
-                            "#home-content > div > div.sign-detail-wrap > div.sign-date > div.sign-info > div.integral-wrap > p.this-week > span")))  # 签到天数
-                    if int(week_reword_button_status) == 0:
-                        logger.warning("七日奖励天数不足! ")
-                        sign_msg += "奖励天数不足! \n"
-                        logger.info("本周已签" + str(week_signdays.text) + "天 ")
-                        sign_msg += "本周已签" + str(week_signdays.text) + "天 \n"
-                    elif int(week_reword_button_status) == 2:
-                        logger.warning("七日奖励已领取过! ")
-                        sign_msg += "奖励已领取过! \n"
-                    elif int(week_reword_button_status) == 1:
-                        logger.info("领取七日奖励 ")
+                            By.XPATH,
+                            "/html/body/div[2]/div/div[1]/div[1]/div/div[1]/div[1]/div[2]/div[1]")))  # 七日签到按钮
+                    sleep(1)
+                    week_reword_status = week_reword_button.accessible_name
+                    # week_reword_button_status = week_reword_button.get_attribute("data-status")  # 七日签到按钮属性
+                    # week_signdays = wait.until(
+                    #     EC.presence_of_element_located((  # 七日签到天数
+                    #         By.CSS_SELECTOR,
+                    #         "#home-content > div > div.sign-detail-wrap > div.sign-date > div.sign-info > div.integral-wrap > p.this-week > span")))  # 签到天数
+                    #to-do
+                    if("不可" in week_reword_status):
+                        logger.info("签到按钮不可点击")
+                        sign_msg += "签到按钮不可点击 \n"
+                    else:
                         try:  # 获取奖励内容
                             logger.debug("正在点击七日奖励领取按钮 ")
                             week_reword_button.click()
                             logger.info("领取七日奖励成功 ")
-                            # sign_msg += "领取奖励成功 \n"
+                            sign_msg += "领取奖励成功 \n"
                             sleep(2)
-                            reword_content = wait.until(
-                                EC.presence_of_element_located((
-                                    By.CSS_SELECTOR,
-                                    "#treasure-box-modal > div > div > div > div > div.treasure-box-result > div > p.name")))
-                            logger.debug("七日奖励为:" + str(reword_content.text) + " ")
-                            sign_msg += str(reword_content.text) + " \n"
-                            Coupon_Exist = True
                         except TimeoutException as ex:
                             logger.error("获取七日奖励加载超时!: {}".format(ex))
                             sign_msg += "获取七日奖励加载超时! \n"
                         except Exception as ex:
                             logger.error("七日奖励可以领取但领取错误!: {}".format(ex))
                             sign_msg += "奖励可以领取但领取错误! \n"
-                        return True, sign_msg
-                    else:
-                        logger.info("不满足条件")
-                        sign_msg += "不满足条件 \n"
                     return True, sign_msg
                 except Exception as ex:
                     logger.error("七日奖励异常!: {}".format(ex))
@@ -248,16 +237,16 @@ def WeekAttendance(browser: webdriver.Chrome, wait: WebDriverWait, sign_msg: str
                 sign_msg += "七日签到网页刷新失败! \n"
                 return False, sign_msg
         else:
-            week_signdays = wait.until(
-                EC.presence_of_element_located((  # 七日签到天数
-                    By.CSS_SELECTOR,
-                    "#home-content > div > div.sign-detail-wrap > div.sign-date > div.sign-info > div.integral-wrap > p.this-week > span")))  # 签到天数
-            logger.info("本周已签" + str(week_signdays.text) + "天 ")
-            sign_msg += "本周已签" + str(week_signdays.text) + "天 \n"
+            # week_signdays = wait.until(
+            #     EC.presence_of_element_located((  # 七日签到天数
+            #         By.CSS_SELECTOR,
+            #         "#home-content > div > div.sign-detail-wrap > div.sign-date > div.sign-info > div.integral-wrap > p.this-week > span")))  # 签到天数
+            # logger.info("本周已签" + str(week_signdays.text) + "天 ")
+            # sign_msg += "本周已签" + str(week_signdays.text) + "天 \n"
             return True, sign_msg
     else:
         logger.info("跳过七日奖励检测! ")
-        sign_msg += "跳过七日奖励检测! \n"
+        # sign_msg += "跳过七日奖励检测! \n"
         return True, sign_msg
 
 def MonthAttendance(browser: webdriver.Chrome, wait: WebDriverWait, sign_msg: str):
@@ -285,47 +274,40 @@ def MonthAttendance(browser: webdriver.Chrome, wait: WebDriverWait, sign_msg: st
                 browser.refresh()
                 logger.info("月度签到网页刷新成功")
                 try:
+                    sleep(1)
                     month_reword_button = wait.until(
                         EC.presence_of_element_located((  # 月度签到按钮
-                            By.CSS_SELECTOR,
-                            "#home-content > div > div.sign-detail-wrap > div.sign-date > div.sign-info > div.reward-way > div.month-day")))  # 月度签到按钮
-                    month_reword_button_status = month_reword_button.get_attribute(
-                        "data-status"
-                    )  # 月度签到按钮属性
+                            By.XPATH,
+                            "/html/body/div[2]/div/div[1]/div[1]/div/div[1]/div[1]/div[2]/div[2]")))  # 月度签到按钮
+                    # month_reword_button_status = month_reword_button.get_attribute(
+                    #     "data-status"
+                    # )  # 月度签到按钮属性
+                    sleep(1)
+                    month_reword_status = month_reword_button.accessible_name
                     month_signdays = wait.until(
                         EC.presence_of_element_located((  # 月度签到天数
-                            By.CSS_SELECTOR,
-                            "#home-content > div > div.sign-detail-wrap > div.sign-date > div.sign-info > div.integral-wrap > p.this-month > span")))  # 月度签到天数
-                    if int(month_reword_button_status) == 0:
-                        logger.warning("月度奖励天数不足! ")
-                        sign_msg += "月度奖励天数不足! \n"
-                        logger.info("本月已签" + str(month_signdays.text) + "天 ")
-                        sign_msg += "本月已签" + str(month_signdays.text) + "天 \n"
-                    elif int(month_reword_button_status) == 2:
-                        logger.warning("月度奖励已领取过! ")
-                        sign_msg += "月度奖励已领取过! \n"
-                    elif int(month_reword_button_status) == 1:
-                        logger.info("领取月度奖励 ")
+                            By.XPATH,
+                            "/html/body/div[2]/div/div[1]/div[1]/div/div[1]/div[2]/div[2]/div[1]/div[1]/span")))  # 月度签到天数元素
+                    numbers = re.findall(r'\d+', month_signdays.text)
+                    extracted_numbers = [int(num) for num in numbers]
+                    logger.debug("当月已签到{}天".format(extracted_numbers))
+                    
+                    if("不可" in month_reword_status):
+                        logger.info("签到按钮不可点击")
+                        sign_msg += "签到按钮不可点击 \n"
+                    else:
                         try:  # 获取奖励内容
                             logger.debug("正在点击月度奖励领取按钮 ")
                             month_reword_button.click()
-                            sleep(2)
                             logger.info("领取月度奖励成功 ")
-                            sign_msg += "领取月度奖励成功 \n"
-                            # ↓地址暂定，去要确认
-                            month_gift = wait.until(
-                                EC.presence_of_element_located((
-                                    By.XPATH,
-                                    '//*[@id="treasure-box-modal"]/div/div/div/div/div[2]/div/p[2]')))
-                            if len(month_gift.text) > 1:
-                                logger.info("月度奖励为:" + str(month_gift.text) + " ")
-                                sign_msg += ("月度奖励为:" + str(month_gift.text) + " \n")
-                                Coupon_Exist = True
+                            sign_msg += "领取奖励成功 \n"
+                            sleep(2)
                         except TimeoutException as ex:
                             logger.error("获取月度奖励加载超时!: {}".format(ex))
+                            sign_msg += "获取月度奖励加载超时! \n"
                         except Exception as ex:
                             logger.error("月度奖励可以领取但领取错误!: {}".format(ex))
-                            sign_msg += "月度奖励可以领取但领取错误! \n"
+                            sign_msg += "奖励可以领取但领取错误! \n"
                     return True, sign_msg
                 except Exception as ex:
                     logger.error("月度奖励异常!: {}".format(ex))
@@ -344,7 +326,7 @@ def MonthAttendance(browser: webdriver.Chrome, wait: WebDriverWait, sign_msg: st
             return True, sign_msg
     else:
         logger.info("跳过月度奖励获取! ")
-        sign_msg += "跳过月度奖励获取! \n"
+        # sign_msg += "跳过月度奖励获取! \n"
         return True, sign_msg
 
 def CheckPoints(browser: webdriver.Chrome, wait: WebDriverWait, sign_msg: str):
@@ -370,26 +352,44 @@ def CheckPoints(browser: webdriver.Chrome, wait: WebDriverWait, sign_msg: str):
             logger.error("积分查询网页刷新失败: {}".format(ex))
             sign_msg += "积分查询网页刷新失败! \n"
             return False, sign_msg
+        
         try:
+            sleep(1)
             data_totalpoints = wait.until(
                 EC.presence_of_element_located((
-                    By.CSS_SELECTOR,
-                    "#home-content > div > div.sign-detail-wrap > div.sign-date > div.sign-info > div.integral-wrap > p.my-integral > span")))
+                    By.XPATH,
+                    "/html/body/div[2]/div/div[1]/div[1]/div/div[1]/div[1]/div[1]/div[2]/span[1]")))
             my_points = data_totalpoints.text
-            logger.info("我的积分: " + my_points + " ")
-            sign_msg += "我的积分: " + my_points + " \n"
-            return True, sign_msg
+            logger.info("我的积分:{}".format(my_points))
+            # logger.info("我的积分: " + my_points + " ")
+            sign_msg += "我的积分:" + my_points + " \n"
         except Exception as ex:
             logger.error("积分查询错误!: {}".format(ex))
             sign_msg += "积分查询错误! \n"
-            return False, sign_msg
+            return False, sign_msg      
+              
+        try:
+            # expire_points_info_ele = EC.presence_of_element_located((  # 积分过期时间
+            #         By.XPATH,
+            #         "/html/body/div[2]/div/div[1]/div[1]/div/div[1]/div[1]/div[1]/div[1]/span[2]"))
+            expire_points_info_ele = wait.until(
+                EC.presence_of_element_located((  # 积分过期时间
+                    By.XPATH,
+                    "/html/body/div[2]/div/div[1]/div[1]/div/div[1]/div[1]/div[1]/div[1]/span[2]")))
+            expire_points_info = expire_points_info_ele.text
+            logger.info("{}".format(expire_points_info))
+            sign_msg += "{}".format(expire_points_info) + " \n"
+        except Exception:
+            logger.info("没有积分会过期")
+
+        return True, sign_msg
     else:
         logger.info("跳过积分推送! ")
-        sign_msg += "跳过积分推送! \n"
+        # sign_msg += "跳过积分推送! \n"
         return True, sign_msg
     
     
-def sign(LoginName: str, LoginPassword: str, retry_count=3):  # 默认出错会重试三次
+def sign(LoginName: str, LoginPassword: str, retry_count = 3):  # 默认出错会重试三次
     """
     Args:
         LoginName (str): AccountName
@@ -405,7 +405,7 @@ def sign(LoginName: str, LoginPassword: str, retry_count=3):  # 默认出错会�
     # 网页属性
     logger.info("创建网页 ")
     chrome_options = webdriver.ChromeOptions()
-    chrome_options.add_argument("--headless")
+    # chrome_options.add_argument("--headless")
     chrome_options.add_argument("--no-sandbox")
     chrome_options.add_argument("--disable-blink-features=AutomationControlled")
     chrome_options.add_argument("--disable-gpu")
