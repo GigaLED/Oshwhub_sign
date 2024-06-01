@@ -154,7 +154,7 @@ def DailyAttendance(browser: webdriver.Chrome, wait: WebDriverWait, sign_msg: st
         logger.debug("当前浏览器地址: {}".format(browser.current_url))
         logger.info("每日签到: ")
         sign_msg += "每日签到: "
-        sleep(1)
+        sleep(2)
         sign_in_button = wait.until(EC.presence_of_element_located(
                         (By.XPATH, '/html/body/div[2]/div/div[1]/div[1]/div/div[1]/div[2]/div[1]/div[1]/span[2]')))
         sleep(1)
@@ -193,7 +193,7 @@ def WeekAttendance(browser: webdriver.Chrome, wait: WebDriverWait, sign_msg: str
     if ENABLE_WeekReward:
         logger.info("七日奖励 ")
         sign_msg += "七日奖励: "
-        if today.weekday() != 6:
+        if today.weekday() == 6:
             try:  # 执行网页刷新
                 browser.refresh()
                 logger.info("七日签到网页刷新成功")
@@ -205,11 +205,6 @@ def WeekAttendance(browser: webdriver.Chrome, wait: WebDriverWait, sign_msg: str
                             "/html/body/div[2]/div/div[1]/div[1]/div/div[1]/div[1]/div[2]/div[1]")))  # 七日签到按钮
                     sleep(1)
                     week_reword_status = week_reword_button.accessible_name
-                    # week_reword_button_status = week_reword_button.get_attribute("data-status")  # 七日签到按钮属性
-                    # week_signdays = wait.until(
-                    #     EC.presence_of_element_located((  # 七日签到天数
-                    #         By.CSS_SELECTOR,
-                    #         "#home-content > div > div.sign-detail-wrap > div.sign-date > div.sign-info > div.integral-wrap > p.this-week > span")))  # 签到天数
                     #to-do
                     if("不可" in week_reword_status):
                         logger.info("签到按钮不可点击")
@@ -237,12 +232,8 @@ def WeekAttendance(browser: webdriver.Chrome, wait: WebDriverWait, sign_msg: str
                 sign_msg += "七日签到网页刷新失败! \n"
                 return False, sign_msg
         else:
-            # week_signdays = wait.until(
-            #     EC.presence_of_element_located((  # 七日签到天数
-            #         By.CSS_SELECTOR,
-            #         "#home-content > div > div.sign-detail-wrap > div.sign-date > div.sign-info > div.integral-wrap > p.this-week > span")))  # 签到天数
-            # logger.info("本周已签" + str(week_signdays.text) + "天 ")
-            # sign_msg += "本周已签" + str(week_signdays.text) + "天 \n"
+            logger.info("未到周日! ")
+            sign_msg += "未到周日! \n"
             return True, sign_msg
     else:
         logger.info("跳过七日奖励检测! ")
@@ -274,14 +265,11 @@ def MonthAttendance(browser: webdriver.Chrome, wait: WebDriverWait, sign_msg: st
                 browser.refresh()
                 logger.info("月度签到网页刷新成功")
                 try:
-                    sleep(1)
+                    sleep(2)
                     month_reword_button = wait.until(
                         EC.presence_of_element_located((  # 月度签到按钮
                             By.XPATH,
                             "/html/body/div[2]/div/div[1]/div[1]/div/div[1]/div[1]/div[2]/div[2]")))  # 月度签到按钮
-                    # month_reword_button_status = month_reword_button.get_attribute(
-                    #     "data-status"
-                    # )  # 月度签到按钮属性
                     sleep(1)
                     month_reword_status = month_reword_button.accessible_name
                     month_signdays = wait.until(
@@ -290,7 +278,7 @@ def MonthAttendance(browser: webdriver.Chrome, wait: WebDriverWait, sign_msg: st
                             "/html/body/div[2]/div/div[1]/div[1]/div/div[1]/div[2]/div[2]/div[1]/div[1]/span")))  # 月度签到天数元素
                     numbers = re.findall(r'\d+', month_signdays.text)
                     extracted_numbers = [int(num) for num in numbers]
-                    logger.debug("当月已签到{}天".format(extracted_numbers))
+                    logger.debug("本月已签到{}天".format(extracted_numbers))
                     
                     if("不可" in month_reword_status):
                         logger.info("签到按钮不可点击")
@@ -319,10 +307,13 @@ def MonthAttendance(browser: webdriver.Chrome, wait: WebDriverWait, sign_msg: st
         else:
             month_signdays = wait.until(
                 EC.presence_of_element_located((  # 月度签到天数
-                    By.CSS_SELECTOR,
-                    "#home-content > div > div.sign-detail-wrap > div.sign-date > div.sign-info > div.integral-wrap > p.this-month > span")))  # 月度签到天数
-            logger.info("本月已签" + str(month_signdays.text) + "天 ")
-            sign_msg += "本月已签" + str(month_signdays.text) + "天 \n"
+                    By.XPATH,
+                    "/html/body/div[2]/div/div[1]/div[1]/div/div[1]/div[2]/div[2]/div[1]/div[1]/span")))  # 月度签到天数元素
+            numbers = re.findall(r'\d+', month_signdays.text)
+            extracted_numbers = [int(num) for num in numbers]
+            logger.info("本月已签到{}天".format(extracted_numbers))
+            logger.info("未到月末! ")
+            sign_msg += "未到月末! \n"
             return True, sign_msg
     else:
         logger.info("跳过月度奖励获取! ")
@@ -369,9 +360,6 @@ def CheckPoints(browser: webdriver.Chrome, wait: WebDriverWait, sign_msg: str):
             return False, sign_msg      
               
         try:
-            # expire_points_info_ele = EC.presence_of_element_located((  # 积分过期时间
-            #         By.XPATH,
-            #         "/html/body/div[2]/div/div[1]/div[1]/div/div[1]/div[1]/div[1]/div[1]/span[2]"))
             expire_points_info_ele = wait.until(
                 EC.presence_of_element_located((  # 积分过期时间
                     By.XPATH,
@@ -405,13 +393,17 @@ def sign(LoginName: str, LoginPassword: str, retry_count = 3):  # 默认出错�
     # 网页属性
     logger.info("创建网页 ")
     chrome_options = webdriver.ChromeOptions()
-    # chrome_options.add_argument("--headless")
+    chrome_options.add_argument("--headless")
+    chrome_options.add_argument("--disable-gpu")
     chrome_options.add_argument("--no-sandbox")
     chrome_options.add_argument("--disable-blink-features=AutomationControlled")
-    chrome_options.add_argument("--disable-gpu")
     chrome_options.add_argument('--disable-dev-shm-usage')
+    chrome_options.add_argument('--incognito')  #无痕隐身模式
+    chrome_options.add_argument("disable-cache")    #禁用缓存
+    chrome_options.add_argument('disable-infobars') #禁用浏览器正在受到自动测试软件的控制提示
+    chrome_options.add_argument('log-level=3')   #INFO = 0 WARNING = 1 LOG_ERROR = 2 LOG_FATAL = 3 default is 0
 
-    browser = webdriver.Chrome(options=chrome_options)
+    browser = webdriver.Chrome(options = chrome_options)
     browser.set_page_load_timeout(20.0)  # 设置页面加载超时时间
     wait = WebDriverWait(browser, 10)
     browser.set_window_size(1024, 768)
@@ -475,6 +467,7 @@ def sign(LoginName: str, LoginPassword: str, retry_count = 3):  # 默认出错�
     # 最后不要忘了把网页关了
     try:
         browser.quit()
+
     except Exception as ex:
         logger.error(" {}".format(ex))
     # 签到顺利，则签到成功数+1
@@ -482,6 +475,16 @@ def sign(LoginName: str, LoginPassword: str, retry_count = 3):  # 默认出错�
         success_count += 1
     else:
         logger.error("签到过程出错")
+
+    try:
+        # 关闭进程,如果你有其他使用chrome的脚本，请不要用以下代码
+        logger.info("关闭进程")
+        os.system('taskkill /im chromedriver.exe /F')
+        os.system('taskkill /im chrome.exe /F')
+        
+    except Exception as ex:
+        logger.error("尝试关闭进程失败:{}".format(ex))
+
     return sign_msg
 
 
