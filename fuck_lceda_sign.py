@@ -21,7 +21,7 @@ ENABLE_MonthReward = True  # 月度奖励领取开关，只有每月最后一天
 ENABLE_PushPoints = True  # 推送积分数开关
 EMABLE_CouponActivation = True # 优惠券激活开关
 
-if ENABLE_PushNnotify and "notify" in sys.modules:
+if ENABLE_PushNnotify:
     try:
         from notify import send
     except ModuleNotFoundError as ex:
