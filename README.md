@@ -1,6 +1,6 @@
 # Oshwhub_sign
  Automatic check-in for Oshwhub
-## How ti Run
+## How to Run
 
 添加如下环境变量
 
@@ -11,6 +11,7 @@
     {"PhoneNumber1": "Password1","PhoneNumber2": "Password2", "PhoneNumbern": "Passwordn"}
 
 还需要ChromeDriver，Windows的安装参考 [这里](https://blog.csdn.net/Z_Lisa/article/details/133307151)
+下载地址在 [这里](https://googlechromelabs.github.io/chrome-for-testing/)
 
 Qinglong安装
 
