@@ -216,8 +216,8 @@ def WeekAttendance(browser: webdriver.Chrome, wait: WebDriverWait, sign_msg: str
                     week_reword_status = week_reword_button.get_attribute('title')
                     #to-do
                     if("不可" in week_reword_status):
-                        logger.info("签到按钮不可点击")
-                        sign_msg += "签到按钮不可点击 \n"
+                        logger.info("不可领取")
+                        sign_msg += "不可领取 \n"
                     else:
                         try:  # 获取奖励内容
                             logger.debug("正在点击七日奖励领取按钮 ")
@@ -292,8 +292,8 @@ def MonthAttendance(browser: webdriver.Chrome, wait: WebDriverWait, sign_msg: st
                     logger.debug("本月已签到{}天".format(extracted_numbers))
                     
                     if("不可" in month_reword_status):
-                        logger.info("签到按钮不可点击")
-                        sign_msg += "签到按钮不可点击 \n"
+                        logger.info("不可领取")
+                        sign_msg += "不可领取 \n"
                     else:
                         try:  # 获取奖励内容
                             logger.debug("正在点击月度奖励领取按钮 ")
@@ -494,8 +494,8 @@ def sign(LoginName: str, LoginPassword: str, retry_count = 3):  # 默认出错�
     try:
         # 关闭进程,如果你有其他使用chrome的脚本，请不要用以下代码
         logger.info("关闭进程")
-        os.system('taskkill /im chromedriver.exe /F')
-        os.system('taskkill /im chrome.exe /F')
+        # os.system('taskkill /im chromedriver.exe /F')
+        # os.system('taskkill /im chrome.exe /F')
         
     except Exception as ex:
         logger.error("尝试关闭进程失败:{}".format(ex))
@@ -555,6 +555,7 @@ if __name__ == "__main__":
         logger.info("\n" + notifications)
 
     logger.info("签到结束 ")
+    logger.debug(f"签到记录：\n {notifications}")
     
     if EMABLE_CouponActivation and Coupon_Exist:
         # 定义要运行的脚本的路径
