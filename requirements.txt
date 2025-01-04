@@ -1,3 +1,4 @@
 selenium
 loguru
 python-dateutil
+requests

@@ -15,6 +15,9 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 from loguru import logger
 
+# 检查命令行参数中是否有'--debug'
+DEBUG = '--debug' in sys.argv
+
 ENABLE_PushNnotify = True  # 消息推送开关
 ENABLE_WeekReward = True  # 七日奖励领取开关
 ENABLE_MonthReward = True  # 月度奖励领取开关，只有每月最后一天会运行，其他时间只会检测签到天数
@@ -403,7 +406,8 @@ def sign(LoginName: str, LoginPassword: str, retry_count = 3):  # 默认出错�
     # 网页属性
     logger.info("创建网页 ")
     chrome_options = webdriver.ChromeOptions()
-    # chrome_options.add_argument("--headless")
+    if not DEBUG:
+        chrome_options.add_argument("--headless")
     chrome_options.add_argument("--disable-gpu")
     chrome_options.add_argument("--no-sandbox")
     chrome_options.add_argument("--disable-blink-features=AutomationControlled")
