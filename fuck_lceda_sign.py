@@ -54,7 +54,7 @@ def OpenWebSite(browser: webdriver.Chrome, sign_msg: str):
         sign_msg += "页面崩溃! \n"
         return False, sign_msg
 
-def FindSignPage(wait: WebDriverWait, sign_msg: str):
+def FindSignPage(browser: webdriver.Chrome, wait: WebDriverWait, sign_msg: str):
     """Find the sign page witch use username and password
 
     Args:
@@ -71,7 +71,9 @@ def FindSignPage(wait: WebDriverWait, sign_msg: str):
         logger.info("寻找登录界面 ")
         PasswordEntryPage = wait.until(
             EC.presence_of_element_located((By.CSS_SELECTOR,"#__layout > div > div > div > main > div > div > div:nth-child(2) > div:nth-child(1) > ul > li:nth-child(2)")))
-        PasswordEntryPage.click()
+        # PasswordEntryPage.click()
+        actions = ActionChains(browser)
+        actions.move_to_element(PasswordEntryPage).click().perform()
         return True, sign_msg
     except Exception as ex:
         logger.error("无法登录:未找到密码登陆界面!: {}".format(ex))
@@ -129,7 +131,9 @@ def SlideToLogin(browser: webdriver.Chrome, wait: WebDriverWait, sign_msg: str):
         sleep(1)
         confirm_button = wait.until(
             EC.presence_of_element_located((By.XPATH,"""//*[@id="__layout"]/div/div/div/main/div/div/div[2]/div[1]/div/div[2]/div/button""")))
-        confirm_button.click()
+        # confirm_button.click()
+        actions = ActionChains(browser)
+        actions.move_to_element(confirm_button).click().perform()
         # 激活
         sleep(2)
         return True, sign_msg
@@ -160,7 +164,9 @@ def DailyAttendance(browser: webdriver.Chrome, wait: WebDriverWait, sign_msg: st
         sleep(1)
         sign_in_button_status = sign_in_button.text
         if "立即签到" in sign_in_button_status:
-            sign_in_button.click()
+            actions = ActionChains(browser)
+            actions.move_to_element(sign_in_button).click().perform()
+            # sign_in_button.click()
             logger.info("签到成功 ")
             sign_msg += "签到成功 \n"
         elif "已签到" in sign_in_button_status:
@@ -204,7 +210,7 @@ def WeekAttendance(browser: webdriver.Chrome, wait: WebDriverWait, sign_msg: str
                             By.XPATH,
                             "/html/body/div[2]/div/div[1]/div[1]/div/div[1]/div[1]/div[2]/div[1]")))  # 七日签到按钮
                     sleep(1)
-                    week_reword_status = week_reword_button.accessible_name
+                    week_reword_status = week_reword_button.get_attribute('title')
                     #to-do
                     if("不可" in week_reword_status):
                         logger.info("签到按钮不可点击")
@@ -212,7 +218,9 @@ def WeekAttendance(browser: webdriver.Chrome, wait: WebDriverWait, sign_msg: str
                     else:
                         try:  # 获取奖励内容
                             logger.debug("正在点击七日奖励领取按钮 ")
-                            week_reword_button.click()
+                            actions = ActionChains(browser)
+                            actions.move_to_element(week_reword_button).click().perform()
+                            # week_reword_button.click()
                             logger.info("领取七日奖励成功 ")
                             sign_msg += "领取奖励成功 \n"
                             sleep(2)
@@ -271,7 +279,7 @@ def MonthAttendance(browser: webdriver.Chrome, wait: WebDriverWait, sign_msg: st
                             By.XPATH,
                             "/html/body/div[2]/div/div[1]/div[1]/div/div[1]/div[1]/div[2]/div[2]")))  # 月度签到按钮
                     sleep(1)
-                    month_reword_status = month_reword_button.accessible_name
+                    month_reword_status = month_reword_button.get_attribute('title')
                     month_signdays = wait.until(
                         EC.presence_of_element_located((  # 月度签到天数
                             By.XPATH,
@@ -286,7 +294,9 @@ def MonthAttendance(browser: webdriver.Chrome, wait: WebDriverWait, sign_msg: st
                     else:
                         try:  # 获取奖励内容
                             logger.debug("正在点击月度奖励领取按钮 ")
-                            month_reword_button.click()
+                            actions = ActionChains(browser)
+                            actions.move_to_element(month_reword_button).click().perform()
+                            # month_reword_button.click()
                             logger.info("领取月度奖励成功 ")
                             sign_msg += "领取奖励成功 \n"
                             sleep(2)
@@ -393,12 +403,13 @@ def sign(LoginName: str, LoginPassword: str, retry_count = 3):  # 默认出错�
     # 网页属性
     logger.info("创建网页 ")
     chrome_options = webdriver.ChromeOptions()
-    chrome_options.add_argument("--headless")
+    # chrome_options.add_argument("--headless")
     chrome_options.add_argument("--disable-gpu")
     chrome_options.add_argument("--no-sandbox")
     chrome_options.add_argument("--disable-blink-features=AutomationControlled")
     chrome_options.add_argument('--disable-dev-shm-usage')
     chrome_options.add_argument('--incognito')  #无痕隐身模式
+    chrome_options.add_argument("--enable-unsafe-swiftshader")
     chrome_options.add_argument("disable-cache")    #禁用缓存
     chrome_options.add_argument('disable-infobars') #禁用浏览器正在受到自动测试软件的控制提示
     chrome_options.add_argument('log-level=3')   #INFO = 0 WARNING = 1 LOG_ERROR = 2 LOG_FATAL = 3 default is 0
@@ -417,7 +428,7 @@ def sign(LoginName: str, LoginPassword: str, retry_count = 3):  # 默认出错�
 
     # 寻找登录界面
     if success_in_progress:
-        success_in_progress, sign_msg = FindSignPage(wait, sign_msg)
+        success_in_progress, sign_msg = FindSignPage(browser, wait, sign_msg)
         if not success_in_progress and retry_count > 0:
             browser.quit()
             return sign(LoginName, LoginPassword, retry_count - 1)
